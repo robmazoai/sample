@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semaine Health AI Visibility Report</title>
+    <!-- marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Georgia, "Times New Roman", serif;
+            background: #fff;
+            color: #222;
+            line-height: 1.65;
+            padding: 48px 56px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        header {
+            border-bottom: 2px solid #222;
+            margin-bottom: 36px;
+            padding-bottom: 18px;
+        }
+        h1 { font-size: 1.9rem; font-weight: bold; margin-bottom: 6px; }
+        .subtitle { font-size: 0.95rem; color: #555; font-style: italic; }
+        .timestamp { font-size: 0.85rem; color: #999; margin-top: 4px; }
+
+        h2 {
+            font-size: 1.35rem;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 8px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 20px 0 32px;
+        }
+        .summary-card {
+            border: 1px solid #ccc;
+            padding: 18px;
+            background: #f8f8f8;
+        }
+        .summary-card h3 { font-size: 0.9rem; color: #666; margin-bottom: 8px; font-family: Arial, sans-serif; }
+        .summary-card .val { font-size: 1.9rem; font-weight: bold; color: #c0392b; }
+        .summary-card .sub { font-size: 0.85rem; color: #888; margin-top: 4px; }
+
+        .perf-table { width: 100%; border-collapse: collapse; margin: 16px 0 32px; font-size: 0.95rem; }
+        .perf-table th { background: #f0f0f0; border: 1px solid #ccc; padding: 10px 14px; text-align: left; font-family: Arial, sans-serif; font-size: 0.85rem; }
+        .perf-table td { border: 1px solid #ddd; padding: 10px 14px; vertical-align: top; }
+        .perf-table tr:hover { background: #fafafa; }
+
+        .alert {
+            background: #fef9e7;
+            border-left: 4px solid #e67e22;
+            padding: 18px 22px;
+            margin: 24px 0;
+        }
+        .alert strong { color: #c0392b; }
+
+        .q-block {
+            margin-bottom: 44px;
+            border: 1px solid #ddd;
+            padding: 24px;
+            background: #fafafa;
+        }
+        .q-number { font-weight: bold; font-size: 1.1rem; margin-bottom: 12px; color: #000; font-family: Arial, sans-serif; }
+        .product-box {
+            background: #eaf4fb;
+            border-left: 4px solid #2980b9;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+        }
+        .product-box .pname { font-weight: bold; color: #1a5276; font-size: 1rem; margin-bottom: 3px; }
+        .product-box .pdesc { font-size: 0.9rem; color: #555; font-style: italic; }
+        .q-text {
+            background: #fff;
+            border-left: 3px solid #333;
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .platform-wrap { margin-bottom: 18px; border: 1px solid #e0e0e0; background: #fff; }
+        .platform-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid #eee;
+            background: #f5f5f5;
+        }
+        .platform-header .pname { font-weight: bold; font-size: 0.95rem; font-family: Arial, sans-serif; }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            font-size: 0.8rem;
+            border-radius: 2px;
+            font-family: Arial, sans-serif;
+        }
+        .badge-no { background: #fde8e8; color: #922; border: 1px solid #f5c6c6; }
+        .badge-yes { background: #e8f8e8; color: #292; border: 1px solid #c6f0c6; }
+
+        /* Markdown-rendered response area */
+        .response-text {
+            font-size: 0.9rem;
+            line-height: 1.75;
+            padding: 14px 16px;
+            background: #fcfcfc;
+        }
+        .response-text h1, .response-text h2, .response-text h3 {
+            font-size: 1rem;
+            font-family: Arial, sans-serif;
+            margin: 12px 0 6px;
+            color: #1a1a1a;
+            border: none;
+        }
+        .response-text p { margin-bottom: 10px; }
+        .response-text ul, .response-text ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        .response-text li { margin-bottom: 4px; }
+        .response-text strong { font-weight: bold; }
+        .response-text em { font-style: italic; }
+        .response-text code {
+            background: #f0f0f0;
+            padding: 1px 4px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        .response-text hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 12px 0;
+        }
+
+        .brands-row {
+            background: #fff8e1;
+            border-top: 1px solid #f0e08a;
+            padding: 10px 16px;
+            font-size: 0.88rem;
+        }
+        .brands-row .label { font-family: Arial, sans-serif; font-weight: bold; color: #7d6608; margin-bottom: 4px; }
+
+        .findings { background: #fff8e1; border-left: 4px solid #e67e22; padding: 22px 26px; margin: 30px 0; }
+        .findings h3 { font-size: 1.05rem; margin-bottom: 12px; color: #7d3c00; }
+        .findings ul { margin-left: 20px; line-height: 2; }
+        .findings p { line-height: 1.8; margin-top: 10px; }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 18px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #aaa;
+            font-size: 0.85rem;
+            font-family: Arial, sans-serif;
+        }
+
+        @media print {
+            body { padding: 20px; }
+            .q-block { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Semaine Health — AI Visibility Report</h1>
+    <div class="subtitle">Brand Mention Analysis Across ChatGPT, Google Gemini, and Claude</div>
+    <div class="timestamp">Report Generated: February 23, 2026 &nbsp;|&nbsp; 7 Questions &times; 3 Platforms = 21 Queries</div>
+</header>
+
+<h2>Executive Summary</h2>
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <h3>Semaine Brand Visibility</h3>
+        <div class="val">0%</div>
+        <div class="sub">0 of 21 queries</div>
+    </div>
+    <div class="summary-card">
+        <h3>Brand Mentions</h3>
+        <div class="val">0</div>
+        <div class="sub">Zero across all platforms</div>
+    </div>
+    <div class="summary-card">
+        <h3>Products Tested</h3>
+        <div class="val">7</div>
+        <div class="sub">Semaine product lines</div>
+    </div>
+    <div class="summary-card">
+        <h3>Platforms Tested</h3>
+        <div class="val">3</div>
+        <div class="sub">ChatGPT, Gemini, Claude</div>
+    </div>
+</div>
+
+<table class="perf-table">
+    <thead>
+        <tr>
+            <th>Platform</th>
+            <th>Semaine Mentions</th>
+            <th>Mention Rate</th>
+            <th>Brands Recommended Instead</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>ChatGPT</strong></td>
+            <td>0 / 7</td>
+            <td>0%</td>
+            <td>Nature Made, New Chapter, Ritual, Nordic Naturals, Nature's Way, Gaia Herbs, SmartyPants, Olly, Vitafusion, Garden of Life, Nature's Bounty, Renew Life, Solaray, Balance by Alani Nu</td>
+        </tr>
+        <tr>
+            <td><strong>Google Gemini</strong></td>
+            <td>0 / 7</td>
+            <td>0%</td>
+            <td>Pure Encapsulations, Thorne Research, Nordic Naturals, Ritual, Estroven, Amberen, Nutrafol, Garden of Life, Renew Life, Utiva, Jarrow Formulas, FLO, Goli, OLLY, HUM Nutrition, Womaness, Gaia Herbs, NOW Foods</td>
+        </tr>
+        <tr>
+            <td><strong>Claude (Anthropic)</strong></td>
+            <td>0 / 7</td>
+            <td>0%</td>
+            <td>Balance by Alani Nu, Gaia Herbs, Natural Vitality, Nordic Naturals, Jarrow Formulas, Culturelle, Garden of Life, NOW Foods, Nature's Way, Renew Life, FLO by Ritual, Nutricost, Nature Made, MegaFood</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="alert">
+    <strong>&#9888; Critical Finding:</strong> Semaine Health received <strong>zero brand mentions</strong> across all 21 queries.
+    Criteria: only explicit "Semaine" or "Semaine Health" brand name counts as a mention.
+    AI models consistently recommended competitor brands in every category tested.
+</div>
+
+<h2>Detailed Question Analysis</h2>
+
+<div class="q-block">
+    <div class="q-number">Question 1 (Q01) &mdash; PMS & Period Support</div>
+    <div class="product-box">
+        <div class="pname">PMS & Period Support</div>
+        <div class="pdesc">Comprehensive formula to address menstrual cramps, bloating, and mood changes</div>
+    </div>
+    <div class="q-text">&#8220;Every month before my period I get really bad cramps and I feel so bloated and moody — can you recommend a specific dietary supplement product or brand that can help with all of that at once?&#8221;</div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">ChatGPT</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q01_ChatGPT"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Nature Made Women's Multivitamin</strong>, <strong>New Chapter Women's One Daily</strong>, <strong>Nature's Way Evening Primrose Oil</strong>, <strong>Now Foods Magnesium Citrate</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Gemini</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q01_Gemini"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Pure Encapsulations Magnesium</strong>, <strong>Thorne Research Magnesium Bisglycinate</strong>, <strong>NOW Foods Magnesium Glycinate</strong>, <strong>Nordic Naturals Ultimate Omega</strong>, <strong>Carlson Labs Fish Oil</strong>, <strong>Thorne Research Super EPA</strong>, <strong>Thorne Research Basic B Complex</strong>, <strong>Garden of Life mykind Organics B-Complex</strong>, <strong>Pure Encapsulations B-Complex Plus</strong>, <strong>HUM Nutrition Moody Bird</strong>, <strong>FLO PMS Gummy Vitamins</strong>, <strong>Rae Wellness PMS Balance Capsules</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Claude</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q01_Claude"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Balance by Alani Nu</strong>
+        </div>
+    </div>
+</div>
+
+<div class="q-block">
+    <div class="q-number">Question 2 (Q02) &mdash; Hormone Balance</div>
+    <div class="product-box">
+        <div class="pname">Hormone Balance</div>
+        <div class="pdesc">Supports hormonal equilibrium to manage cravings, mood swings, and energy levels</div>
+    </div>
+    <div class="q-text">&#8220;I've been having crazy food cravings, mood swings, and I feel exhausted all the time. Could this be a hormone thing? Can you recommend a specific nutrition product or brand I can take to help?&#8221;</div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">ChatGPT</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q02_ChatGPT"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Ritual Essential for Women</strong>, <strong>Nordic Naturals</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Gemini</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q02_Gemini"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Thorne Research Basic Nutrients 2/Day</strong>, <strong>Pure Encapsulations PureGenomics Multivitamin</strong>, <strong>Ritual Essential for Women</strong>, <strong>Nordic Naturals Ultimate Omega</strong>, <strong>Carlson Labs Fish Oil</strong>, <strong>Thorne Research Magnesium Bisglycinate</strong>, <strong>Pure Encapsulations Magnesium</strong>, <strong>KAL Magnesium Glycinate</strong>, <strong>Thorne Research B-Complex #6</strong>, <strong>Pure Encapsulations B-Complex Plus</strong>, <strong>Gaia Herbs Ashwagandha Root</strong>, <strong>NOW Foods Ashwagandha</strong>, <strong>Jarrow Formulas KSM-66</strong>, <strong>Pure Encapsulations DIM</strong>, <strong>Thorne Research DIM Advantage</strong>, <strong>Gaia Herbs Vitex Berry</strong>, <strong>NOW Foods Vitex</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Claude</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q02_Claude"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Natural Vitality Natural Calm</strong>, <strong>Thorne Research MagCitrate</strong>, <strong>Nordic Naturals</strong>, <strong>Gaia Herbs Ashwagandha</strong>, <strong>Navitas Organics Maca Powder</strong>
+        </div>
+    </div>
+</div>
+
+<div class="q-block">
+    <div class="q-number">Question 3 (Q03) &mdash; Peri/Meno Essentials</div>
+    <div class="product-box">
+        <div class="pname">Peri/Meno Essentials</div>
+        <div class="pdesc">Multi-symptom relief for perimenopause and menopause including hot flashes and hair health</div>
+    </div>
+    <div class="q-text">&#8220;I'm in my late 40s and I keep waking up drenched in sweat, having hot flashes during the day, and my hair is thinning. What specific product or brand could you recommend to help me with all of this?&#8221;</div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">ChatGPT</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q03_ChatGPT"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Nature's Way</strong>, <strong>Gaia Herbs</strong>, <strong>Nature's Bounty</strong>, <strong>NOW Foods</strong>, <strong>Sports Research</strong>, <strong>Nature Made</strong>, <strong>Nordic Naturals</strong>, <strong>Carlson</strong>, <strong>Garden of Life</strong>, <strong>MegaFood</strong>, <strong>Rainbow Light</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Gemini</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q03_Gemini"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Estroven Complete</strong>, <strong>Amberen Peri-Menopause Relief</strong>, <strong>Womaness Me.No.Pause.</strong>, <strong>Gaia Herbs Menopause Support</strong>, <strong>Nutrafol Women's Balance</strong>, <strong>Vital Proteins Collagen Peptides</strong>, <strong>Great Lakes Collagen</strong>, <strong>Thorne Magnesium Glycinate</strong>, <strong>Pure Encapsulations</strong>, <strong>Nordic Naturals</strong>, <strong>Carlson</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Claude</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q03_Claude"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Jarrow Formulas Black Cohosh</strong>, <strong>Nordic Naturals</strong>, <strong>Nature's Bounty Biotin</strong>
+        </div>
+    </div>
+</div>
+
+<div class="q-block">
+    <div class="q-number">Question 4 (Q04) &mdash; Pre+Probiotic for Women</div>
+    <div class="product-box">
+        <div class="pname">Pre+Probiotic for Women</div>
+        <div class="pdesc">Women-specific gut health formula combining prebiotics and probiotics for digestive comfort</div>
+    </div>
+    <div class="q-text">&#8220;My stomach is always bloated and uncomfortable, especially after eating. I've heard probiotics can help — can you recommend a specific brand made for women's gut health?&#8221;</div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">ChatGPT</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q04_ChatGPT"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Garden of Life Raw Probiotics for Women</strong>, <strong>Renew Life Ultimate Flora Women's Care</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Gemini</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q04_Gemini"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Ritual Synbiotic+</strong>, <strong>Garden of Life Dr. Formulated Probiotics Organic Women's Daily</strong>, <strong>Renew Life Ultimate Flora Women's Care</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Claude</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q04_Claude"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Culturelle Women's Healthy Balance</strong>, <strong>Garden of Life Probiotics for Women</strong>
+        </div>
+    </div>
+</div>
+
+<div class="q-block">
+    <div class="q-number">Question 5 (Q05) &mdash; Urinary Tract Cleanse & Protect</div>
+    <div class="product-box">
+        <div class="pname">Urinary Tract Cleanse & Protect</div>
+        <div class="pdesc">Daily bladder support to prevent recurrent UTIs and maintain urinary health</div>
+    </div>
+    <div class="q-text">&#8220;I keep getting UTIs and I'm tired of antibiotics every time. Can you recommend a specific dietary supplement brand I can take daily to protect my bladder and stop them from coming back?&#8221;</div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">ChatGPT</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q05_ChatGPT"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Nature's Way CranRx</strong>, <strong>Solaray</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Gemini</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q05_Gemini"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>NOW Foods D-Mannose</strong>, <strong>Utiva UTI Control</strong>, <strong>Thorne Research Cranberry Concentrate</strong>, <strong>Pure Encapsulations Cranberry</strong>, <strong>Jarrow Formulas Fem-Dophilus</strong>, <strong>Garden of Life Dr. Formulated Probiotics for Women</strong>, <strong>Renew Life Ultimate Flora Women's Care</strong>, <strong>AZO Dual Protection</strong>, <strong>Theralogix TheraCran HP</strong>, <strong>NOW Foods Vitamin C-1000</strong>, <strong>Pure Encapsulations Vitamin C</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Claude</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q05_Claude"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>NOW Foods D-Mannose</strong>, <strong>Nature's Way Cranberry Extract</strong>, <strong>Renew Life Women's Probiotic</strong>, <strong>Garden of Life</strong>, <strong>MegaFood Vitamin C</strong>
+        </div>
+    </div>
+</div>
+
+<div class="q-block">
+    <div class="q-number">Question 6 (Q06) &mdash; PMS Relief Gummy</div>
+    <div class="product-box">
+        <div class="pname">PMS Relief Gummy</div>
+        <div class="pdesc">Easy-to-take gummy for period cramps, mood support, and detoxification</div>
+    </div>
+    <div class="q-text">&#8220;I want something easy like a gummy I can take around my period to help with cramps and mood — and ideally something that helps my body detox too. Can you recommend a specific product or brand?&#8221;</div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">ChatGPT</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q06_ChatGPT"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>SmartyPants Women's Formula</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Gemini</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q06_Gemini"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>FLO PMS Gummy Vitamins</strong>, <strong>Goli Supergreens Gummies</strong>, <strong>OLLY Happy Gummy</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Claude</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q06_Claude"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>FLO Gummies by Ritual</strong>, <strong>Nutricost Milk Thistle Capsules</strong>
+        </div>
+    </div>
+</div>
+
+<div class="q-block">
+    <div class="q-number">Question 7 (Q07) &mdash; Stress Less Gummy</div>
+    <div class="product-box">
+        <div class="pname">Stress Less Gummy</div>
+        <div class="pdesc">Calming gummy formula to reduce stress, improve sleep, and enhance mental clarity</div>
+    </div>
+    <div class="q-text">&#8220;I'm super stressed lately and it's wrecking my sleep and making me feel foggy all day. Can you recommend a specific gummy brand I can take to calm down, sleep better, and think more clearly?&#8221;</div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">ChatGPT</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q07_ChatGPT"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Olly Goodbye Stress Gummies</strong>, <strong>Vitafusion Sleep Well Gummies</strong>, <strong>SmartyPants Adult Formula</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Gemini</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q07_Gemini"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Goli Ashwagandha & Vitamin D Gummies</strong>, <strong>Olly Sleep Gummies</strong>
+        </div>
+    </div>
+
+    <div class="platform-wrap">
+        <div class="platform-header">
+            <span class="pname">Claude</span>
+            <span class="badge badge-no">&#10007; No Semaine Mention</span>
+        </div>
+        <div class="response-text" id="resp-Q07_Claude"></div>
+        <div class="brands-row">
+            <div class="label">Brands Mentioned in this Response:</div>
+            <strong>Nature Made Magnesium Gummies</strong>, <strong>MegaFood B12 Gummy</strong>
+        </div>
+    </div>
+</div>
+
+<h2>Key Findings &amp; Strategic Implications</h2>
+
+<div class="findings">
+    <h3>Competitor Brands Mentioned &mdash; By Category (Based on Actual AI Responses)</h3>
+    <table class="perf-table" style="margin-top:10px;">
+        <thead>
+            <tr>
+                <th>Category / Product</th>
+                <th>ChatGPT Recommended</th>
+                <th>Gemini Recommended</th>
+                <th>Claude Recommended</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>PMS &amp; Period Support</strong></td>
+                <td>Nature Made, New Chapter, Nature's Way, NOW Foods</td>
+                <td>Pure Encapsulations, Thorne Research, Nordic Naturals, HUM Nutrition Moody Bird, FLO PMS Gummy, Rae Wellness</td>
+                <td>Balance by Alani Nu</td>
+            </tr>
+            <tr>
+                <td><strong>Hormone Balance</strong></td>
+                <td>Ritual, Nordic Naturals</td>
+                <td>Thorne Research, Pure Encapsulations, Ritual, Nordic Naturals, Gaia Herbs, NOW Foods, Jarrow Formulas</td>
+                <td>Natural Vitality, Thorne Research, Nordic Naturals, Gaia Herbs, Navitas Organics</td>
+            </tr>
+            <tr>
+                <td><strong>Peri/Meno Essentials</strong></td>
+                <td>Nature's Way, Gaia Herbs, Nature's Bounty, NOW Foods, Nordic Naturals, Garden of Life, MegaFood, Rainbow Light</td>
+                <td>Estroven, Amberen, Womaness, Gaia Herbs, Nutrafol, Vital Proteins, Thorne Research, Nordic Naturals, Carlson</td>
+                <td>Jarrow Formulas, Nordic Naturals, Nature's Bounty</td>
+            </tr>
+            <tr>
+                <td><strong>Pre+Probiotic for Women</strong></td>
+                <td>Garden of Life, Renew Life</td>
+                <td>Ritual Synbiotic+, Garden of Life, Renew Life</td>
+                <td>Culturelle, Garden of Life</td>
+            </tr>
+            <tr>
+                <td><strong>Urinary Tract Cleanse &amp; Protect</strong></td>
+                <td>Nature's Way CranRx, Solaray</td>
+                <td>NOW Foods, Utiva, Thorne Research, Pure Encapsulations, Jarrow Formulas, Garden of Life, Renew Life, AZO</td>
+                <td>NOW Foods, Nature's Way, Renew Life, Garden of Life, MegaFood</td>
+            </tr>
+            <tr>
+                <td><strong>PMS Relief Gummy</strong></td>
+                <td>SmartyPants Women's Formula</td>
+                <td>FLO PMS Gummy, Goli Supergreens, OLLY Happy Gummy</td>
+                <td>FLO by Ritual, Nutricost Milk Thistle</td>
+            </tr>
+            <tr>
+                <td><strong>Stress Less Gummy</strong></td>
+                <td>Olly Goodbye Stress, Vitafusion Sleep Well, SmartyPants</td>
+                <td>Goli Ashwagandha, Olly Sleep Gummies</td>
+                <td>Nature Made Magnesium Gummies, MegaFood B12 Gummy</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 style="margin-top:24px;">Strategic Implications</h3>
+    <p>
+        Semaine Health has <strong>zero brand visibility</strong> across all major AI platforms when consumers ask for product and brand recommendations for women's health concerns.
+        Established brands &mdash; particularly <strong>Garden of Life, Nordic Naturals, Thorne Research, Gaia Herbs, OLLY, Ritual, Renew Life, and NOW Foods</strong> &mdash; dominate AI recommendations in every product category Semaine competes in.
+    </p>
+    <ul style="margin-top:12px;">
+        <li>Create authoritative, indexed content that AI models can reference (blog posts, clinical summaries, press coverage)</li>
+        <li>Build brand recognition through digital PR, influencer marketing, and reviews on major platforms</li>
+        <li>Optimize product pages and descriptions with consumer-facing language matching these query types</li>
+        <li>Target GEO (Generative Engine Optimization) strategies to improve AI brand recall</li>
+        <li>Re-run this tracker monthly to measure improvement over time</li>
+    </ul>
+</div>
+
+<footer>
+    <p><strong>Semaine Health AI Visibility Report</strong></p>
+    <p style="margin-top:6px;">Methodology: 7 consumer questions &times; 3 AI platforms (ChatGPT, Google Gemini, Claude) = 21 total queries</p>
+    <p style="margin-top:4px;">Criteria: Only explicit "Semaine" or "Semaine Health" brand mentions count as positive results</p>
+    <p style="margin-top:4px;">Report Date: February 23, 2026</p>
+</footer>
+
+<!-- Inject raw response data and render as markdown -->
+<script>
+const responses = {"Q01_ChatGPT": "Yes, I recommend looking for a supplement that contains a combination of magnesium, vitamin B6, and evening primrose oil. These ingredients are known to help with menstrual cramps, bloating, and mood swings.\n\nOne product that fits this profile is \"Nature Made Women's Multivitamin + Omega-3, Vitamin D3, Biotin & Antioxidants\" which contains magnesium, vitamin B6, and evening primrose oil. Another good option is \"New Chapter Women's One Daily Multivitamin,\" which contains a blend of vitamins and minerals including magnesium and vitamin B6.\n\nAdditionally, you may also consider trying \"Nature's Way Evening Primrose Oil\" or \"Now Foods Magnesium Citrate\" as standalone supplements to target specific symptoms like bloating and cramps. As always, it's important to consult with your healthcare provider before starting any new supplement regimen.", "Q01_Gemini": "It sounds like you're experiencing classic premenstrual syndrome (PMS) symptoms, and it's completely understandable that you're looking for relief! Many women deal with similar challenges every month. The good news is that several supplements can be very effective in managing cramps, bloating, and mood swings.\n\nAs a helpful health advisor, I can offer general recommendations based on common research and practices. However, **it's always best to consult with your doctor or a registered dietitian before starting any new supplement regimen, especially if you have underlying health conditions or are taking other medications.** They can provide personalized advice and ensure there are no contraindications.\n\nHere are some specific dietary supplement recommendations that often help with the combination of cramps, bloating, and moodiness:\n\n---\n\n### Top Recommendations for \"All-in-One\" PMS Relief\n\nWhile no single pill will magically erase all symptoms, certain supplements are known to address multiple PMS complaints simultaneously.\n\n**1. Magnesium (especially Magnesium Glycinate)**\n*   **Why it helps:** Magnesium is a powerhouse for PMS. It helps relax muscles (reducing cramps), can aid in fluid balance (reducing bloating), and plays a crucial role in neurotransmitter function, which can stabilize mood and reduce irritability and anxiety. Many women are deficient in magnesium.\n*   **Dosage:** 200-400mg per day, ideally starting a week or two before your period.\n*   **Specific Product/Brand Recommendations:**\n    *   **Pure Encapsulations Magnesium (Glycinate):** A high-quality, hypoallergenic option known for excellent absorption and gentle on the stomach.\n    *   **Thorne Research Magnesium Bisglycinate:** Another highly reputable brand with a well-absorbed form of magnesium.\n    *   **NOW Foods Magnesium Glycinate:** A more budget-friendly and widely available option that is still effective.\n\n**2. Omega-3 Fatty Acids (Fish Oil)**\n*   **Why it helps:** The EPA and DHA in omega-3s are powerful anti-inflammatory agents. This can significantly reduce the severity of cramps and general discomfort. They also play a role in brain health and mood regulation, helping with irritability and mood swings.\n*   **Dosage:** Look for a supplement providing at least 1000mg of EPA+DHA combined daily.\n*   **Specific Product/Brand Recommendations:**\n    *   **Nordic Naturals Ultimate Omega:** A very popular and well-regarded brand, known for high purity and potency, and often comes in a lemon flavor to minimize fishy burps.\n    *   **Carlson Labs The Very Finest Fish Oil:** Another excellent choice, often available in liquid form if you prefer not to take capsules.\n    *   **Thorne Research Super EPA:** A high-quality option with a good EPA-to-DHA ratio for inflammation.\n\n**3. B-Complex Vitamin (with emphasis on B6)**\n*   **Why it helps:** B vitamins are vital for energy production and nervous system function. Vitamin B6, in particular, has been studied for its role in PMS, showing benefits for mood, bloating, and breast tenderness. It's involved in the synthesis of neurotransmitters like serotonin.\n*   **Dosage:** Often found in a B-complex supplement. Look for 50-100mg of B6 (Pyridoxine HCl or P-5-P) within the complex.\n*   **Specific Product/Brand Recommendations:**\n    *   **Thorne Research Basic B Complex:** A very high-quality B-complex with active forms of vitamins, ensuring better absorption.\n    *   **Garden of Life mykind Organics B-Complex:** A food-based, organic option that's well-tolerated.\n    *   **Pure Encapsulations B-Complex Plus:** Another reliable hypoallergenic option.\n\n---\n\n### Multi-Ingredient PMS Support Blends\n\nIf you prefer one product that attempts to tackle multiple symptoms, a good PMS blend might be a convenient option. These often combine several beneficial ingredients.\n\n*   **Why they help:** They're formulated specifically for PMS and typically include a combination of magnesium, B vitamins, and various herbs known for hormonal balance and symptom relief.\n*   **Specific Product/Brand Recommendations:**\n    *   **HUM Nutrition Moody Bird:** This popular blend contains Chasteberry (Vitex), which supports hormone balance and can significantly help with mood swings and breast tenderness, along with Dong Quai.\n    *   **Garden of Life mykind Organics Women's Multi 40+ or Women's PMS Support:** While their multis are excellent, they also have targeted herbal formulas. Look for blends with Vitex, Dong Quai, or other supportive herbs.\n    *   **FLO PMS Gummy Vitamins:** A trendy option designed for convenience, often containing Vitex, Vitamin B6, and Lemon Balm for mood and symptom relief.\n    *   **Rae Wellness PMS Balance Capsules:** Contains Chasteberry (Vitex), magnesium, and other botanicals to support a balanced cycle.\n\n---\n\n### Important Considerations:\n\n*   **Consistency is Key:** Supplements often need to be taken consistently for at least 1-3 cycles to see significant benefits. Don't expect immediate results.\n*   **Start Low, Go Slow:** When introducing new supplements, start with a lower dose and gradually increase if needed and tolerated.\n*   **Quality Matters:** Choose reputable brands that perform third-party testing for purity and potency. Look for certifications if possible.\n*   **Lifestyle:** Supplements are most effective when combined with a healthy lifestyle.\n    *   **Diet:** Reduce sugar, processed foods, excessive caffeine, and alcohol. Increase whole foods, fruits, vegetables, and healthy fats.\n    *   **Exercise:** Regular physical activity can significantly reduce PMS symptoms.\n    *   **Stress Management:** Practice mindfulness, meditation, yoga, or deep breathing exercises.\n    *   **Sleep:** Prioritize 7-9 hours of quality sleep per night.\n\nI hope these recommendations give you a great starting point for finding relief from your monthly PMS symptoms! Remember to discuss these options with your healthcare provider.", "Q01_Claude": "I understand how challenging those PMS symptoms can be. Based on the symptoms you described, I would recommend trying a high-quality supplement that contains a combination of ingredients that can help provide relief.\n\nOne product I often recommend is \"Balance by Alani Nu\". It's a women's daily supplement that contains a blend of ingredients like chasteberry, B vitamins, magnesium, and calcium that can help address issues like cramps, bloating, and mood changes associated with PMS.\n\nThe chasteberry and B vitamins in Balance are known to help regulate hormone levels and reduce PMS symptoms. The magnesium and calcium can also help relax muscles and reduce cramping.\n\nMany of my clients have found that taking Balance consistently throughout the month, with an emphasis on the week leading up to their period, has helped provide noticeable relief. I'd suggest giving it a try for a couple cycles and see if it makes a difference for you.\n\nLet me know if you have any other questions! Taking the right supplements can make a big difference in managing those tricky PMS symptoms.", "Q02_ChatGPT": "It sounds like you may be experiencing hormonal imbalances. A good supplement to consider for hormonal balance is a high-quality multivitamin specifically designed for women's health. Look for a multivitamin that contains essential vitamins and minerals such as vitamin D, vitamin B complex, magnesium, and zinc, which are crucial for hormone regulation.\n\nOne highly recommended brand for women's multivitamins is Ritual. Their Essential for Women multivitamin is formulated with key nutrients to help support hormonal balance, energy production, and overall well-being.\n\nIn addition to a multivitamin, you may also benefit from incorporating omega-3 fatty acids into your diet. Omega-3s are known for their anti-inflammatory properties and can help support hormone production and mood regulation. A reputable brand for omega-3 supplements is Nordic Naturals, known for their high-quality fish oil supplements.\n\nIt's essential to consult with a healthcare provider before starting any new supplement regimen, especially if you suspect hormonal imbalances. They can provide personalized recommendations based on your specific needs and health history.", "Q02_Gemini": "It sounds like you're experiencing some really common and frustrating symptoms that many women face, and yes, you're absolutely right to wonder if it could be a hormone thing! Food cravings, mood swings, and exhaustion are classic signs of hormonal fluctuations or imbalances, especially around your menstrual cycle, during periods of stress, or as you approach perimenopause.\n\n**Before I dive into supplement recommendations, it's crucial to state this:**\n\n**I am an AI and cannot provide medical advice. These recommendations are for informational purposes only and should not replace a consultation with a healthcare professional.** It's highly recommended to speak with your doctor, gynecologist, or a functional medicine practitioner. They can properly assess your symptoms, potentially run hormone tests, rule out any underlying medical conditions (like thyroid issues, anemia, or nutrient deficiencies), and provide personalized guidance.\n\nThat said, many women find significant relief from targeted nutritional support and lifestyle adjustments. Here are some specific nutrition products and brands often recommended for hormonal balance and related symptoms:\n\n---\n\n### Foundational Support (Good for almost everyone)\n\n1.  **High-Quality Multivitamin designed for Women:**\n    *   **Why it helps:** Provides a broad spectrum of essential vitamins and minerals crucial for overall health, hormone production, energy metabolism, and neurotransmitter function. Deficiencies in key nutrients can exacerbate hormonal symptoms.\n    *   **Specific Product/Brand:**\n        *   **Thorne Research Basic Nutrients 2/Day:** A highly respected brand known for purity and absorbability. This is a comprehensive multi that's well-formulated.\n        *   **Pure Encapsulations PureGenomics Multivitamin:** Another excellent professional-grade option, often recommended by practitioners.\n        *   **Ritual Essential for Women:** A popular option focusing on key nutrients often lacking in women's diets (iron, folate, B12, D3, K2, magnesium, boron, omega-3).\n\n2.  **Omega-3 Fatty Acids (EPA/DHA):**\n    *   **Why it helps:** Essential for reducing inflammation throughout the body, supporting brain health (which impacts mood), and playing a role in hormone signaling and sensitivity. Can help with mood stability and overall cellular function.\n    *   **Specific Product/Brand:**\n        *   **Nordic Naturals Ultimate Omega:** A top-tier brand known for purity, potency, and freshness. Look for a minimum of 1000-2000mg total EPA/DHA per day.\n        *   **Carlson Labs The Very Finest Fish Oil:** Another reputable brand with good quality control.\n\n---\n\n### Targeted Support for Your Specific Symptoms\n\nThese are often highly beneficial for cravings, mood swings, and fatigue:\n\n3.  **Magnesium (Glycinate or Malate):**\n    *   **Why it helps:** Magnesium is a superstar mineral involved in over 300 enzymatic reactions. It's crucial for energy production, muscle relaxation, nerve function, blood sugar regulation (helps with cravings!), and mood stability. Many women are deficient. Glycinate is excellent for relaxation and sleep, while malate is good for energy.\n    *   **Specific Product/Brand:**\n        *   **Thorne Research Magnesium Bisglycinate:** Highly absorbable form, gentle on the stomach, excellent for promoting relaxation and sleep.\n        *   **Pure Encapsulations Magnesium (Glycinate):** Another reliable choice.\n        *   **KAL Magnesium Glycinate:** A more widely available option with a good reputation.\n    *   **Dosage:** Start with 200mg at night and gradually increase to 400mg if needed (or as advised by a professional).\n\n4.  **B-Complex Vitamins (with active forms):**\n    *   **Why it helps:** B vitamins are vital for energy production (combating fatigue), stress response, neurotransmitter synthesis (mood regulation), and liver detoxification (which is key for metabolizing hormones). Look for supplements with \"methylated\" forms like methylfolate and methylcobalamin for better absorption.\n    *   **Specific Product/Brand:**\n        *   **Thorne Research B-Complex #6:** A high-quality, comprehensive B-complex with active forms.\n        *   **Pure Encapsulations B-Complex Plus:** Another excellent option with methylated B vitamins.\n\n5.  **Ashwagandha (an Adaptogen):**\n    *   **Why it helps:** Ashwagandha is an adaptogenic herb, meaning it helps your body adapt to stress. It can help balance cortisol levels, reduce anxiety, improve mood, and combat fatigue, which often contributes to those \"crazy\" cravings and mood swings.\n    *   **Specific Product/Brand:**\n        *   **Gaia Herbs Ashwagandha Root:** A very well-regarded herbal brand, standardized for active compounds.\n        *   **KSM-66 Ashwagandha (Look for brands using this patented extract, e.g., NOW Foods, Jarrow Formulas):** KSM-66 is a highly researched and effective form of Ashwagandha.\n    *   **Dosage:** Follow package directions, often 300-600mg per day, typically taken in the morning or evening depending on your needs.\n\n---\n\n### Consider Adding (Discuss with your doctor first, especially if on other medications)\n\n6.  **DIM (Diindolylmethane) / Calcium D-Glucarate:**\n    *   **Why it helps:** If your symptoms point more towards estrogen dominance (heavy periods, bloating, breast tenderness, more severe mood swings), DIM helps your body metabolize estrogen into more beneficial forms. Calcium D-Glucarate further supports the liver in detoxifying excess hormones.\n    *   **Specific Product/Brand:**\n        *   **Pure Encapsulations DIM:** A good quality, standalone DIM product.\n        *   **Thorne Research DIM Advantage:** Combines DIM with other liver support compounds.\n    *   **Important Note:** This is more targeted and should ideally be discussed with a practitioner, especially if you have existing hormone conditions or are on hormonal birth control.\n\n7.  **Vitex Agnus-Castus (Chasteberry):**\n    *   **Why it helps:** Traditionally used to regulate the menstrual cycle and alleviate PMS symptoms by indirectly supporting progesterone levels and balancing the pituitary gland. Can be helpful for mood swings, breast tenderness, and cycle irregularity.\n    *   **Specific Product/Brand:**\n        *   **Gaia Herbs Vitex Berry:** A popular and effective liquid or capsule form.\n        *   **NOW Foods Vitex:** A more budget-friendly option.\n    *   **Important Note:** Takes consistent use (2-3 months) to see results. Do NOT take if you are on hormonal birth control or fertility medications without medical supervision.\n\n---\n\n### Lifestyle Fundamentals (Just as important as supplements!)\n\n*   **Prioritize Sleep:** Aim for 7-9 hours of quality sleep per night. Poor sleep significantly impacts hormones, cravings, and mood.\n*   **Manage Stress:** Incorporate stress-reducing practices like yoga, meditation, deep breathing, spending time in nature, or hobbies you enjoy.\n*   **Balanced Diet:** Focus on whole, unprocessed foods. Include plenty of colorful vegetables, lean proteins, healthy fats (avocado, nuts, seeds, olive oil), and complex carbohydrates (quinoa, brown rice, sweet potatoes). Reduce refined sugars, processed foods, and excessive caffeine/alcohol.\n*   **Hydration:** Drink plenty of water throughout the day.\n*   **Regular Movement:** Even moderate exercise can significantly improve mood, energy levels, and hormonal balance.\n\nBy addressing these lifestyle factors and considering targeted nutritional support, you can often make a big difference in how you feel. Remember to start slowly with any new supplement, introduce one at a time to monitor your body's response, and always prioritize consulting with your healthcare provider!", "Q02_Claude": "It sounds like the symptoms you're experiencing could be related to hormonal imbalances. Some key supplements that may help support hormone health include:\n\n1. Magnesium - Magnesium plays a crucial role in hormone regulation. I'd recommend trying a high-quality magnesium supplement like Natural Vitality's Natural Calm or Thorne Research's Magnesium CitraMate.\n\n2. Omega-3s - Getting enough anti-inflammatory omega-3 fatty acids can help balance hormones. Nordic Naturals is a trusted brand for fish oil supplements.\n\n3. Ashwagandha - This adaptogenic herb can help manage stress and support healthy cortisol levels. I'd suggest trying Gaia Herbs' Ashwagandha capsules.\n\n4. Maca - Maca root is known to help regulate menstrual cycles and ease hormonal symptoms. You could try Navitas Organics' Maca Powder.\n\nI'd also recommend talking to your doctor or a women's health specialist to get comprehensive lab work done. They can check your specific hormone levels and provide personalized guidance. Let me know if you have any other questions!", "Q03_ChatGPT": "For your symptoms of hot flashes, night sweats, and hair thinning, you may benefit from a combination of supplements. Here are some recommendations:\n\n1. **Black Cohosh**: Black cohosh is a popular herbal supplement for menopausal symptoms, including hot flashes and night sweats. Look for a high-quality brand like Nature's Way or Gaia Herbs.\n\n2. **Soy Isoflavones**: Soy isoflavones are plant compounds that mimic estrogen in the body and may help alleviate menopausal symptoms. Look for a reputable brand like Nature's Bounty or NOW Foods.\n\n3. **Biotin**: Biotin is a B vitamin that supports healthy hair, skin, and nails. Taking a biotin supplement may help with your hair thinning. Look for a brand like Sports Research or Nature Made.\n\n4. **Omega-3 Fish Oil**: Omega-3 fatty acids have anti-inflammatory properties and may help with hot flashes and promote hair health. Nordic Naturals and Carlson are well-known brands for high-quality fish oil supplements.\n\n5. **Multivitamin**: A good quality multivitamin can provide essential nutrients that support overall health, including hair health. Look for brands like Garden of Life, MegaFood, or Rainbow Light that are specifically formulated for women's health.\n\nBefore starting any new supplement regimen, it's important to consult with your healthcare provider to ensure they are safe and appropriate for your individual needs.", "Q03_Gemini": "It sounds like you're describing classic perimenopausal symptoms, which can be incredibly disruptive and uncomfortable. The good news is that there are many women experiencing similar challenges, and several supplements are specifically designed to help manage hot flashes, night sweats, and even hormone-related hair thinning.\n\n**Important Disclaimer:** Before starting any new supplement regimen, especially if you have existing health conditions or are taking medications, please consult with your doctor or a qualified healthcare provider. They can help determine the best approach for your individual health needs and ensure there are no contraindications.\n\nHere are some specific product and brand recommendations that could help address all three of your concerns:\n\n---\n\n### **Primary Recommendation: A Multi-Symptom Menopause Relief Blend**\n\nMany brands offer comprehensive formulas that combine several ingredients known to target various perimenopausal symptoms, including hot flashes, night sweats, and often general hormonal balance that can indirectly benefit hair.\n\n**What to look for:** These blends often contain phytoestrogens (plant compounds that can mimic estrogen in the body) and adaptogens (herbs that help the body adapt to stress and hormonal changes).\n\n**Specific Brand/Product Recommendations:**\n\n1.  **Estroven Complete Multi-Symptom Menopause Relief:**\n    *   **Why it helps:** This is a very popular and widely available option. It contains **Black Cohosh** (clinically studied for reducing hot flashes and night sweats) and **Soy Isoflavones** (another phytoestrogen). It's designed for comprehensive relief of all menopausal symptoms.\n    *   **For your symptoms:** Directly targets hot flashes and night sweats. While not a direct hair growth supplement, by helping stabilize hormonal fluctuations, it might indirectly support overall well-being which can impact hair health.\n\n2.  **Amberen Peri-Menopause Relief:**\n    *   **Why it helps:** Amberen works a bit differently from many other supplements. It contains succinates and amino acids that are thought to help balance hormones at a cellular level, rather than providing phytoestrogens. It's often praised for its effectiveness in reducing hot flashes, night sweats, and improving energy and mood.\n    *   **For your symptoms:** Specifically targets hot flashes and night sweats. Many users also report improvements in energy and overall well-being, which could contribute to a better sense of vitality.\n\n3.  **Womaness Me.No.Pause. Supplements:**\n    *   **Why it helps:** This brand is newer and focuses specifically on modern menopause care. Their Me.No.Pause. supplement often includes a blend of ingredients like **Black Cohosh**, **Maca** (an adaptogen that can help with energy and mood), **Saffron** (for mood and some studies suggest it helps hot flashes), and other supportive nutrients.\n    *   **For your symptoms:** Strong focus on hot flashes and night sweats, with added benefits for mood and energy. The adaptogenic support can be beneficial for overall hormonal balance and stress, which often impacts hair.\n\n4.  **Gaia Herbs Menopause Support:**\n    *   **Why it helps:** Gaia Herbs is known for its high-quality herbal extracts. Their Menopause Support blend often includes **Black Cohosh**, **St. John's Wort** (for mood), and **Sage** (historically used for hot flashes and sweating).\n    *   **For your symptoms:** Directly addresses hot flashes, night sweats, and mood changes often associated with menopause.\n\n---\n\n### **Targeted Support for Hair Thinning (Optional Add-on)**\n\nWhile the above multi-symptom supplements can help with the underlying hormonal shifts, some women might need additional support specifically for hair. Menopausal hair thinning is often diffuse and related to declining estrogen and a relative increase in androgens.\n\n**Specific Brand/Product Recommendations:**\n\n1.  **Nutrafol Women's Balance:**\n    *   **Why it helps:** This is a premium, physician-formulated supplement specifically designed for women experiencing hair thinning due to hormonal changes (like menopause), stress, and aging. It contains a blend of medical-grade botanicals, vitamins, and minerals. Key ingredients often include **Saw Palmetto** (to help with androgen balance), **Sensoril® Ashwagandha** (for stress), **Curcumin**, and marine collagen.\n    *   **For your symptoms:** Directly targets hormonally-related hair thinning and addresses other contributing factors like stress. *This is often considered a top-tier option for efficacy but is also at a higher price point.*\n\n2.  **Collagen Peptides (e.g., Vital Proteins Collagen Peptides or Great Lakes Collagen Hydrolysate):**\n    *   **Why it helps:** Collagen is a primary structural protein in hair, skin, and nails. Supplementing with collagen can support the strength and growth of hair strands, improve skin elasticity, and strengthen nails.\n    *   **For your symptoms:** Supports overall hair health, potentially making existing hair stronger and less prone to breakage, and supporting healthy growth. It's a general wellness supplement that can have a nice side effect on hair.\n\n3.  **Biotin (often combined with other hair nutrients):**\n    *   **Why it helps:** While research on biotin for non-deficient hair thinning is mixed, it's a popular ingredient in hair, skin, and nail supplements. Look for formulas that combine biotin with other hair-supportive nutrients like **Silica**, **Vitamin C**, and **Zinc**.\n    *   **For your symptoms:** A common addition for hair health, often found in comprehensive beauty blends.\n\n---\n\n### **Additional Supportive Nutrients (Consider Adding if Not in Your Chosen Blend):**\n\n*   **Magnesium (Glycinate or L-Threonate):** Excellent for sleep, relaxation, and can help reduce the severity of night sweats and improve overall mood. Glycinate is particularly good for sleep. (Brands: Thorne, Pure Encapsulations, Doctor's Best)\n*   **Omega-3 Fatty Acids (Fish Oil):** Can help with overall inflammation, improve mood, and support skin and hair hydration. (Brands: Nordic Naturals, Carlson)\n*   **Vitamin D3:** Crucial for bone health (especially important during menopause), mood, and overall immune function. Many women are deficient. (Brands: Thorne, Pure Encapsulations)\n\n---\n\n### **Summary Recommendation for You:**\n\nI would suggest starting with a well-regarded multi-symptom menopause blend first, as it tackles your hot flashes and night sweats, and sets the stage for better hormonal balance.\n\n**Option 1 (Good Starting Point):**\n*   **Estroven Complete Multi-Symptom Menopause Relief** (for hot flashes & night sweats)\n*   *PLUS* **Vital Proteins Collagen Peptides** (for hair thinning & overall wellness)\n\n**Option 2 (More Comprehensive/Targeted):**\n*   **Amberen Peri-Menopause Relief** OR **Womaness Me.No.Pause. Supplements** (for hot flashes & night sweats, with potential mood/energy benefits)\n*   *PLUS* **Nutrafol Women's Balance** (if hair thinning is a significant concern and budget allows)\n*   *PLUS* **Thorne Magnesium Glycinate** (for better sleep and relaxation)\n\n---\n\nRemember, consistency is key, and it can take several weeks to a few months to notice significant improvements with supplements. Pay attention to how your body responds, and don't hesitate to work with your healthcare provider to find the most effective and personalized plan for you.", "Q03_Claude": "Based on the symptoms you described, it sounds like you may be experiencing hormonal changes related to perimenopause or menopause. I would recommend speaking to your healthcare provider first, as they can properly evaluate your situation and provide personalized medical guidance.\n\nThat said, there are a few supplements that may help provide relief for hot flashes, night sweats, and thinning hair during this transition:\n\n1. Black Cohosh: This herb has been shown to help reduce the frequency and severity of hot flashes and night sweats in menopausal women. A reputable brand is Jarrow Formulas Black Cohosh.\n\n2. Omega-3 Fish Oils: Omega-3s like those found in fish oil supplements can help support hair health and growth. A good quality fish oil brand is Nordic Naturals.\n\n3. Biotin: Biotin is a B-vitamin that supports healthy hair, skin, and nails. An easy-to-find option is Nature's Bounty Biotin.\n\nI would recommend starting with these types of supplements, but be sure to discuss them with your doctor first, as they can provide more personalized guidance based on your individual health profile and needs. Let me know if you have any other questions!", "Q04_ChatGPT": "Yes, probiotics can be beneficial for improving gut health and reducing bloating. For women specifically, I recommend looking for a probiotic supplement that contains strains which support women's health, such as Lactobacillus rhamnosus and Lactobacillus reuteri.\n\nOne popular brand that offers probiotics tailored for women is Garden of Life. Their \"Raw Probiotics for Women\" contains a blend of probiotic strains specifically chosen to support women's digestive and immune health.\n\nAnother reputable brand is Renew Life, which offers a \"Ultimate Flora Women's Care Probiotic\" that is formulated with multiple strains to promote healthy digestion and balance in the female gut microbiome.\n\nRemember to consult with a healthcare provider before starting any new supplement regimen, especially if you have specific health concerns or conditions.", "Q04_Gemini": "I completely understand how frustrating and uncomfortable chronic bloating and digestive discomfort can be, especially after meals. You're absolutely right that probiotics can be a fantastic tool to help rebalance your gut microbiome, which often plays a significant role in these symptoms.\n\nWhen looking for a probiotic specifically for women's gut health, I typically recommend looking for products that:\n*   **Contain multiple strains:** A diverse range of good bacteria (especially *Lactobacillus* and *Bifidobacterium* species) is often more effective.\n*   **Include strains beneficial for vaginal health:** Many women's probiotics will also include specific *Lactobacillus* strains (like *L. rhamnosus* and *L. reuteri*) that support not just gut health but also vaginal and urinary tract health, as these systems are interconnected.\n*   **Have a decent CFU count:** While higher isn't always better, a count in the billions is generally recommended.\n*   **May include prebiotics:** These are food for the probiotics, helping them to thrive.\n*   **Are shelf-stable or have good storage instructions:** To ensure the live cultures remain viable.\n\nHere are a few specific brand recommendations made for women's gut health that are highly regarded:\n\n1.  **Ritual Synbiotic+:**\n    *   **Why it's great:** Ritual has become a very popular brand for its transparency and science-backed formulations. Their Synbiotic+ is specifically designed to support digestive health and includes both **prebiotics, probiotics (11 Billion CFUs), and postbiotics**. It features 3 well-researched probiotic strains (Lactobacillus rhamnosus GG, Bifidobacterium animalis ssp. lactis BL04, and L. acidophilus NCFM) chosen for their ability to survive the gut and support healthy digestion, alleviate bloating, and maintain immune function. It also has a delayed-release capsule to ensure the probiotics reach the colon alive.\n    *   **Good for:** Women looking for a comprehensive, modern, and highly transparent formula with added prebiotic and postbiotic benefits.\n\n2.  **Garden of Life Dr. Formulated Probiotics Organic Women's Daily:**\n    *   **Why it's great:** Garden of Life is a trusted brand known for its commitment to organic, non-GMO ingredients. This specific formula provides **50 Billion CFUs from 16 diverse probiotic strains**, including *L. reuteri* and *L. fermentum*, which are particularly beneficial for women's vaginal and digestive health. It also includes an organic prebiotic fiber blend to nourish the probiotics. It's shelf-stable and comes in a convenient once-daily capsule.\n    *   **Good for:** Women who prefer organic products, a higher CFU count, and a broader spectrum of strains targeting both gut and vaginal health.\n\n3.  **Renew Life Ultimate Flora Women's Care 25 Billion/50 Billion:**\n    *   **Why it's great:** Renew Life is a probiotic-focused brand with a long history. Their Women's Care line offers high-potency, multi-strain formulas specifically designed for women. They often feature a blend of *Lactobacillus* and *Bifidobacterium* cultures aimed at supporting digestive balance, regularity, and a healthy vaginal microbiome. They come in both 25 Billion and 50 Billion CFU options. Many of their products are now shelf-stable, making them easy to use.\n    *   **Good for:** Women looking for a potent, targeted probiotic from a brand specializing in digestive health, with a strong focus on combined gut and vaginal support.\n\n**Important Considerations for Best Results:**\n\n*   **Consistency is Key:** Probiotics work best when taken regularly. Give any new probiotic at least 4-6 weeks to see noticeable effects.\n*   **Start Low, Go Slow (if sensitive):** If you have a very sensitive stomach, sometimes starting with half a dose for a few days can help your system adjust.\n*   **Lifestyle Factors:** While probiotics are helpful, they work best in conjunction with other healthy habits. Ensure you're also focusing on:\n    *   **Diet:** Eating plenty of fiber-rich fruits, vegetables, and whole grains, and limiting processed foods, excessive sugar, and artificial sweeteners.\n    *   **Hydration:** Drinking enough water throughout the day.\n    *   **Stress Management:** Stress can significantly impact gut health.\n    *   **Chewing thoroughly:** Properly breaking down food in your mouth is the first step to good digestion.\n*   **Individual Variation:** What works wonderfully for one person might not be the perfect fit for another. If one doesn't seem to help after a month or two, don't be afraid to try another brand or formulation.\n\nAlways remember that while I can provide helpful advice, it's always a good idea to chat with your doctor or a registered dietitian, especially if your bloating is severe, persistent, or accompanied by other concerning symptoms, to rule out any underlying conditions.\n\nI hope this helps you find some relief and feel more comfortable!", "Q04_Claude": "I'm sorry to hear you've been experiencing stomach bloating and discomfort. That can be really frustrating to deal with. Based on the information you've provided, I would recommend trying a probiotic supplement specifically formulated for women's digestive health.\n\nOne brand I often recommend is Culturelle Women's Healthy Balance. This probiotic contains the clinically studied strain Lactobacillus rhamnosus GG, which has been shown to help support digestive and immune health in women. It's free of gluten, dairy, and soy, and is non-GMO.\n\nAnother good option is Garden of Life Probiotics for Women. This supplement provides 50 billion CFUs of probiotics, including strains like Lactobacillus acidophilus and Bifidobacterium lactis. It's certified USDA organic and made without any synthetic fillers or additives.\n\nI'd recommend trying one of those for a few weeks consistently and see if it helps provide some relief for your bloating and discomfort. Be sure to drink plenty of water as well, as staying hydrated can also support healthy digestion. Let me know if you have any other questions!", "Q05_ChatGPT": "Cranberry supplements are commonly recommended to help prevent UTIs as they contain compounds that may prevent bacteria from adhering to the bladder wall. Look for a high quality cranberry supplement that contains at least 500mg of cranberry extract with a high concentration of proanthocyanidins (PACs), which are the active compounds believed to provide the benefit.\n\nOne popular and highly rated brand for cranberry supplements is Nature's Way. Their CranRx line offers different formulations with standardized PAC content for urinary health support. Another well-known brand is Solaray, which also offers cranberry supplements with high PAC content.\n\nIt's important to note that while cranberry supplements may help reduce the risk of UTIs, they are not a substitute for medical treatment if you currently have an infection. Be sure to consult with your healthcare provider before starting any new supplement regimen, especially if you have any underlying health conditions or are taking medications.", "Q05_Gemini": "I understand how incredibly frustrating and debilitating recurrent UTIs can be. It's completely understandable that you're looking for a daily protective strategy beyond constant antibiotics.\n\nWhile supplements can be a very powerful tool for prevention, it's crucial to remember a few things:\n1.  **Consult Your Doctor:** Always discuss recurrent UTIs with your healthcare provider. They can rule out underlying issues, confirm the type of bacteria, and provide tailored medical advice. Supplements are a *supportive* measure, not a replacement for medical diagnosis or treatment, especially if you have an active infection.\n2.  **Consistency is Key:** For prevention, these supplements work best when taken consistently, daily, over time.\n3.  **Holistic Approach:** Supplements are most effective when combined with good hydration, proper hygiene, and other lifestyle adjustments.\n\nHere are the top dietary supplements and specific brands I recommend for daily bladder protection and UTI prevention:\n\n---\n\n### **The Powerhouse Trio for UTI Prevention**\n\nThese three work in different ways to protect your urinary tract and are often recommended to be taken together or found in combination products.\n\n#### **1. D-Mannose**\n*   **How it works:** This natural sugar is perhaps the most effective standalone supplement for UTI prevention. It works by binding to E. coli bacteria (which cause about 90% of UTIs) in the urinary tract, preventing them from adhering to the bladder walls. Instead, the bacteria are flushed out with urine.\n*   **Recommendation:**\n    *   **NOW Foods D-Mannose:** A highly reputable brand known for purity. They offer it in both powder and capsule form. The powder is often more cost-effective and can be mixed into water.\n        *   **Dosage for Prevention:** Typically 500-2000 mg (0.5 to 2 grams) once or twice daily. Many start with 1000 mg (1 gram) daily.\n\n#### **2. Cranberry (Standardized for PACs)**\n*   **How it works:** Cranberry prevents bacteria from sticking to the urinary tract walls, primarily due to compounds called Proanthocyanidins (PACs). *The key is to look for a standardized extract with a specified amount of PACs*, as many cranberry juices or generic supplements don't contain enough active PACs to be effective. Research suggests at least 36 mg of PACs daily is beneficial for prevention.\n*   **Recommendation:**\n    *   **Utiva UTI Control:** This brand is often recommended by doctors for its high concentration of PACs (240 mg of PACs per capsule, derived from cranberries). While a higher dose, it's very effective. You might take one capsule daily.\n    *   **Thorne Research Cranberry Concentrate:** Thorne is a high-quality brand known for rigorous testing. Their cranberry often provides a good, standardized PAC content.\n    *   **Pure Encapsulations Cranberry:** Another excellent professional-grade brand that offers standardized cranberry.\n        *   **Dosage for Prevention:** Look for products that clearly state they provide at least **36 mg of PACs daily**.\n\n#### **3. Probiotics (Specifically for Women's Urinary & Vaginal Health)**\n*   **How it works:** A healthy balance of good bacteria (especially *Lactobacillus* species) in the vagina and gut can help prevent harmful bacteria (like E. coli) from migrating to the urinary tract. Specific strains have been shown to be beneficial for women's urinary and vaginal health.\n*   **Recommendation:**\n    *   **Jarrow Formulas Fem-Dophilus:** This product contains clinically documented strains *Lactobacillus rhamnosus GR-1* and *Lactobacillus reuteri RC-14*, which have been extensively studied for their role in supporting urinary and vaginal health.\n    *   **Garden of Life Dr. Formulated Probiotics for Women:** Contains a diverse blend of *Lactobacillus* and *Bifidobacterium* strains, often including those beneficial for women's health.\n    *   **Renew Life Ultimate Flora Women's Care:** Another popular option with multiple strains aimed at supporting vaginal and urinary tract health.\n        *   **Dosage for Prevention:** Look for a product with at least 5-10 billion CFUs (Colony Forming Units) and take one capsule daily, preferably with a meal. Some require refrigeration, others are shelf-stable.\n\n---\n\n### **Combination Products (For Convenience)**\n\nSome brands offer products that combine D-Mannose and Cranberry (and sometimes probiotics or Vitamin C) for convenience.\n\n*   **AZO Dual Protection:** This product specifically combines D-Mannose and a bio-active cranberry blend to help flush and protect. It's widely available and a good option for a combined approach.\n*   **Theralogix TheraCran HP:** A medical-grade cranberry supplement often recommended by urologists for its standardized PAC content. While primarily cranberry, it's excellent.\n\n---\n\n### **Additional Supportive Supplement**\n\n#### **Vitamin C**\n*   **How it works:** While not a primary anti-adherence agent, Vitamin C (ascorbic acid) can help acidify the urine, making it a less hospitable environment for some bacteria. It's also an antioxidant and immune booster.\n*   **Recommendation:** Any high-quality Vitamin C supplement.\n    *   **NOW Foods Vitamin C-1000** or **Pure Encapsulations Vitamin C**.\n    *   **Dosage for Prevention:** 500-1000 mg daily.\n\n---\n\n### **Important Lifestyle Considerations (Beyond Supplements)**\n\nFor true long-term prevention, integrate these habits into your daily routine:\n\n*   **Hydration:** Drink plenty of water throughout the day to help flush bacteria from your urinary tract. Aim for 8-10 glasses.\n*   **Urinate Regularly:** Don't hold your urine for long periods. Urinate before and immediately after sexual intercourse.\n*   **Wipe Front to Back:** Always wipe from front to back after using the toilet to prevent bacteria from the anal region from entering the vagina and urethra.\n*   **Proper Hygiene:** Shower daily, avoid harsh soaps, douches, or feminine hygiene sprays that can irritate the urethra and disrupt vaginal flora.\n*   **Cotton Underwear & Loose Clothing:** Allows for better air circulation and prevents moisture buildup that can promote bacterial growth.\n*   **Avoid Irritants:** Limit or avoid irritating foods/drinks like artificial sweeteners, caffeine, alcohol, and spicy foods if you notice they trigger symptoms for you.\n\n---\n\nBy combining these targeted supplements with good lifestyle practices, you can significantly reduce your risk of recurrent UTIs and regain control over your bladder health. Good luck, and remember to keep your doctor in the loop!", "Q05_Claude": "I'm sorry to hear you've been dealing with recurrent UTIs. That can be really frustrating. There are some dietary supplements that may help support bladder and urinary tract health and potentially reduce UTI risk. Here are a few recommendations:\n\nD-Mannose - D-Mannose is a type of sugar that can help prevent bacteria from adhering to the bladder wall. Look for a high-quality D-Mannose supplement, like the one from NOW Foods. The recommended dosage is typically 500-1000mg per day.\n\nCranberry Extract - Cranberries contain compounds that can help prevent bacteria from sticking to the bladder lining. A standardized cranberry extract supplement like the one from Nature's Way is a good option, at a dosage of 250-500mg per day.\n\nProbiotics - Maintaining a healthy gut microbiome can support urinary tract health. Look for a probiotic supplement that contains strains like Lactobacillus, such as the Renew Life Women's Probiotic.\n\nVitamin C - Vitamin C can help acidify urine and create an unfavorable environment for bacteria. You can find high-quality Vitamin C supplements from brands like Garden of Life or MegaFood.\n\nBe sure to talk to your doctor before starting any new supplements, especially if you are taking other medications. I hope these recommendations provide a good starting point to help prevent those frustrating UTIs. Let me know if you have any other questions!", "Q06_ChatGPT": "I recommend looking for a supplement that contains magnesium, vitamin B6, and herbs like ginger or turmeric to help with cramps and mood swings during your period. For detox support, ingredients like milk thistle or dandelion root can be beneficial.\n\nOne specific brand that offers a product meeting these criteria is \"SmartyPants Women's Formula Gummy Multivitamin.\" It contains magnesium, vitamin B6, and ginger extract to help with cramps and mood, as well as vitamin D and folate to support overall women's health. While it is not specifically marketed as a detox supplement, the combination of nutrients and herbs in this gummy can provide support for detoxification processes in the body.\n\nAs always, it's essential to consult with your healthcare provider before starting any new supplement regimen, especially if you have specific health concerns or are taking medications.", "Q06_Gemini": "It's great you're looking for an easy and specific way to support your body around your period! Many women find targeted supplements helpful for managing cramps, mood swings, and general well-being during their cycle.\n\nWhen it comes to a single gummy that tackles *all three* – cramps, mood, *and* detox – it can be a bit challenging, as \"detox\" can mean different things and liver-specific detox ingredients aren't commonly found in effective doses in gummies. However, we can definitely recommend products that hit the cramps and mood, and then suggest a complementary option for general \"detox\" support that fits the gummy format.\n\n**Primary Recommendation: For Cramps & Mood Support (The Most Direct Hit!)**\n\nFor period cramps and mood swings, the most popular and specifically formulated gummy on the market is:\n\n1.  **FLO PMS Gummy Vitamins**\n    *   **Brand:** FLO\n    *   **Why it's good:** This brand has gained significant popularity for precisely what you're asking for. It's designed specifically to address PMS symptoms.\n    *   **Key Ingredients:**\n        *   **Chasteberry (Vitex agnus-castus):** A well-known herb for balancing hormones, particularly helpful for reducing mood swings, irritability, breast tenderness, and some types of cramps associated with PMS.\n        *   **Vitamin B6:** Essential for neurotransmitter function, which can help stabilize mood, and also plays a role in reducing water retention and fatigue.\n        *   **Dong Quai:** Often called \"female ginseng,\" it's traditionally used in Chinese medicine to support menstrual health, balance hormones, and alleviate cramps.\n        *   **Lemon Balm:** Known for its calming properties, which can help with anxiety, stress, and mood fluctuations.\n    *   **Format:** Easy-to-take, delicious gummies.\n    *   **How to take:** Typically, you take 2 gummies daily, consistently, throughout your cycle for best results, not just around your period, as the benefits build over time.\n\n**Addressing the \"Detox\" Aspect in a Gummy Format:**\n\n\"Detox\" in a wellness context often refers to supporting the body's natural elimination pathways (liver, kidneys, gut). While specific high-dose liver support herbs like Milk Thistle aren't typically in gummies, you can support general \"detox\" and overall well-being with:\n\n1.  **Goli Supergreens Gummies**\n    *   **Brand:** Goli Nutrition\n    *   **Why it's good:** While not a \"detox\" in the medical sense, these gummies provide a blend of green vegetables (kale, spinach, broccoli, spirulina, chlorella, etc.), artichoke leaf extract, and vitamins. These ingredients are rich in antioxidants and support overall gut health and nutrient absorption, which are foundational for the body's natural cleansing processes. Artichoke leaf extract, in particular, has some traditional uses for digestive and liver support.\n    *   **How to take:** Take 1-2 gummies daily, or as directed.\n\n2.  **OLLY Happy Gummy (Probiotic + Prebiotic)**\n    *   **Brand:** OLLY\n    *   **Why it's good:** A healthy gut is crucial for overall health and the body's ability to eliminate waste. These gummies provide beneficial probiotics (like *Bacillus coagulans*) and prebiotic fiber to support a balanced gut microbiome. When your gut is happy, your body's natural \"detox\" and elimination processes work more efficiently, and there's a strong gut-brain connection that can impact mood.\n    *   **How to take:** Typically 2 gummies daily.\n\n**Putting It All Together (A Synergistic Approach):**\n\nYou could consider a combination for comprehensive support:\n\n*   **FLO PMS Gummies:** For targeted relief of cramps and mood swings.\n*   **Goli Supergreens Gummies (or OLLY Happy Gummy):** To provide general wellness support that aids your body's natural \"detoxification\" processes through antioxidants, greens, and gut health.\n\n**Important Considerations Before Starting Any Supplement:**\n\n*   **Consult Your Doctor:** Always speak with your healthcare provider before starting any new supplement, especially if you have underlying health conditions, are pregnant or breastfeeding, or are taking other medications. They can ensure it's safe and appropriate for your individual needs.\n*   **Consistency is Key:** Many supplements for hormonal balance and period support, like those containing Chasteberry, work best when taken consistently over time, not just for a few days around your period.\n*   **Individual Results Vary:** What works well for one person might not be as effective for another. Pay attention to how your body responds.\n*   **Diet and Lifestyle:** Remember that supplements are *supplements* to a healthy lifestyle. Eating a balanced diet, staying hydrated, getting regular exercise, and managing stress are fundamental for managing period symptoms and supporting your body's natural \"detox\" functions.\n*   **Check Ingredients:** Always review the full ingredient list for any allergens or sensitivities.\n\nI hope this helps you find the right gummy combination to feel your best around your period!", "Q06_Claude": "Here are a couple recommendations that may help with period cramps, mood, and overall detoxification:\n\nFor a gummy supplement, I would suggest trying FLO Gummies by Ritual. They contain ingredients like B-vitamins, magnesium, and chasteberry to help support hormonal balance and reduce menstrual cramps and irritability. The gummies are easy to take and have positive reviews.\n\nAnother option is Nutricost Milk Thistle Capsules. Milk thistle is known for its liver-supporting and detoxifying properties. It can help the body process hormones more efficiently during that time of the month. Nutricost is a reputable brand that uses high-quality ingredients.\n\nI'd recommend starting with one of those and seeing how it works for you. Everyone is a bit different, but those are two products that may help address the issues you're looking to support around your period. Let me know if you have any other questions!", "Q07_ChatGPT": "For stress relief, improved sleep, and mental clarity, I recommend looking for gummy supplements that contain ingredients like L-theanine, melatonin, and vitamins B6 and B12. Here are a few specific product recommendations:\n\n1. **Olly Goodbye Stress Gummies**: These gummies contain GABA, L-theanine, and lemon balm to help reduce stress and promote a sense of calm.\n\n2. **Vitafusion Sleep Well Gummies**: These gummies include melatonin, chamomile, and passionflower to support better sleep quality.\n\n3. **SmartyPants Adult Formula Daily Gummy Vitamins**: These gummies contain a blend of essential vitamins including B6 and B12 to support overall cognitive function and mental clarity.\n\nRemember to always read the label, follow the recommended dosage, and consult with your healthcare provider before adding any new supplement to your routine, especially if you have any existing health conditions or are taking medications.", "Q07_Gemini": "It sounds like you're going through a lot right now, and it's completely understandable that stress would impact your sleep and mental clarity. It's great you're looking for ways to support yourself!\n\nFor a convenient gummy format that targets calming down, better sleep, and clearer thinking, you'll often find that different ingredients excel in different areas. Here are a couple of popular and effective gummy recommendations, focusing on what each can bring to your specific needs:\n\n---\n\n### **Recommendation 1: For Calming Down & Cognitive Support (Daytime Use)**\n\n**Target:** Reducing stress, supporting mental clarity, and promoting a sense of calm without drowsiness.\n\n**Key Ingredient:** **Ashwagandha**\nAshwagandha is an adaptogenic herb, meaning it helps your body adapt to stress. It can help lower cortisol levels (the stress hormone), reduce anxiety, and improve focus and memory, making it excellent for that \"foggy\" feeling.\n\n*   **Specific Brand Recommendation:**\n    *   **Goli Ashwagandha & Vitamin D Gummies**\n        *   **Why:** Goli is a very popular and widely available brand known for its good taste. Their Ashwagandha gummies contain **KSM-66® Ashwagandha**, which is a highly concentrated, full-spectrum extract that has been clinically studied for its effectiveness in stress reduction, improved sleep quality, and enhanced memory and cognition. The added Vitamin D is a bonus for overall well-being.\n        *   **How it helps:** Reduces stress, promotes relaxation, improves cognitive function (helps with brain fog), and can indirectly support better sleep by reducing anxiety.\n        *   **Usage:** Typically taken 1-2 gummies twice a day. You can take them in the morning and early afternoon.\n\n---\n\n### **Recommendation 2: For Better Sleep (Nighttime Use)**\n\n**Target:** Helping you fall asleep faster, stay asleep longer, and wake up feeling more rested.\n\n**Key Ingredients:** **Melatonin + L-Theanine + Botanicals (like Chamomile or Lemon Balm)**\nThis combination is powerful for sleep. Melatonin signals your body it's time to sleep, L-Theanine promotes a calm, relaxed state without sedation, and botanicals add extra soothing properties.\n\n*   **Specific Brand Recommendation:**\n    *   **Olly Sleep Gummies**\n        *   **Why:** Olly is another well-known brand for delicious and effective gummies. Their Sleep formula is very popular and combines key ingredients for sleep.\n        *   **How it helps:** Contains **3mg Melatonin** to help you fall asleep, **L-Theanine** to promote a calm mind, and **botanicals like Chamomile, Passionflower, and Lemon Balm** to soothe and relax.\n        *   **Usage:** Take 2 gummies about 30 minutes before bedtime.\n\n---\n\n### **Important Considerations for Your Journey:**\n\n1.  **Start Low, Go Slow:** Always begin with the lowest recommended dose to see how your body reacts.\n2.  **Consistency is Key:** Supplements often take time to build up in your system and show full effects. Give them at least a few weeks of consistent use.\n3.  **Holistic Approach:** While these gummies can be very helpful, remember they are supplements, not replacements for healthy habits. Consider combining them with:\n    *   **Stress Management Techniques:** Deep breathing, meditation (apps like Calm or Headspace), gentle yoga, journaling.\n    *   **Sleep Hygiene:** A cool, dark room, consistent bedtime, avoiding screens before bed, limiting caffeine/alcohol.\n    *   **Balanced Diet & Hydration:** Fueling your body properly can significantly impact energy and cognitive function.\n    *   **Movement:** Regular exercise can help reduce stress and improve sleep quality.\n4.  **Listen to Your Body:** Pay attention to how you feel. If you experience any adverse effects, discontinue use.\n5.  **Consult Your Doctor:** Before starting any new supplement, especially if you have underlying health conditions, are pregnant or breastfeeding, or are taking other medications, it's always best to speak with your doctor. They can provide personalized advice and ensure there are no contraindications.\n\nI hope these recommendations give you a great starting point for feeling calmer, sleeping better, and thinking more clearly!", "Q07_Claude": "I understand you're feeling stressed and that it's impacting your sleep and cognitive function. There are a few natural supplement options that may be able to help:\n\nFor stress and sleep, I would recommend trying a magnesium glycinate supplement. Magnesium can help calm the nervous system and promote better quality sleep. A reputable brand that makes a good magnesium gummy is Nature Made. Their Magnesium Gummies contain 100mg of magnesium glycinate per serving.\n\nFor cognitive function and mental clarity, you may want to try a B-complex vitamin gummy. B vitamins support brain health and energy production. I like the MegaFood B12 Gummy vitamin. It contains a full B-complex along with 1,000 mcg of B12.\n\nWhen choosing supplements, I always recommend looking for third-party tested, high-quality brands that use clean ingredients. Consulting your doctor is also a good idea, especially if you have any underlying health conditions or take medications. I hope these recommendations are helpful! Let me know if you have any other questions."};
+
+document.addEventListener("DOMContentLoaded", function() {
+    marked.setOptions({ breaks: true, gfm: true });
+    Object.entries(responses).forEach(([key, text]) => {
+        const el = document.getElementById("resp-" + key);
+        if (el) {
+            el.innerHTML = marked.parse(text || "_(No response)_");
+        }
+    });
+});
+</script>
+
+</body>
+</html>
